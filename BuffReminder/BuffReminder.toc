@@ -1,0 +1,21 @@
+## Interface: 16001
+## Title: Buff Reminder
+## Notes: Warns when your class buffs are missing or expire, with a click-to-cast row of the missing ones. Choose which buffs to watch, per class.
+## Category: Combat
+## IconAtlas: transmog-icon-warning-small
+## Author: brinuz
+## Version: 0.1.0
+## SavedVariables: BuffReminderDB
+## X-License: GPL-3.0-or-later
+## AddonCompartmentFunc: BuffReminder_OnAddonCompartmentClick
+
+# Files load in this order, each receiving (addonName, ns) as its `...`.
+# Core first: the shared table, saved settings and events. Buffs is the data
+# the rest reads.
+Core.lua
+Buffs.lua
+Watch.lua
+# Bar.lua defines the mixin Bar.xml's frames name, so it loads first.
+Bar.lua
+Bar.xml
+Settings.lua
