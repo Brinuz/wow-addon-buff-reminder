@@ -2,7 +2,7 @@
 
 Warns you on **World of Warcraft: Forever** when your class buffs are missing or expire, with a row of the missing ones to click and cast. Built entirely from Blizzard's own UI.
 
-<img src="docs/screenshot.png" alt="The Missing buffs row: Battle Shout, Find Minerals and a sharpening stone, ready to click" width="430">
+<img src="docs/screenshot.png" alt="The Missing buffs row: three missing buffs, ready to click" width="430">
 
 ## Features
 
