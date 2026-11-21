@@ -68,12 +68,12 @@ end
 function BuffReminderButtonMixin:OnDragStart()
 	if IsShiftKeyDown() and not InCombatLockdown() then
 		BuffReminderBar:StartMoving()
+		BuffReminderBar.moving = true
 	end
 end
 
 function BuffReminderButtonMixin:OnDragStop()
-	BuffReminderBar:StopMovingOrSizing()
-	BuffReminderBar:SavePosition()
+	BuffReminderBar:StopMoving()
 end
 
 -- ---------------------------------------------------------------- row
@@ -82,6 +82,14 @@ BuffReminderBarMixin = {}
 function BuffReminderBarMixin:OnLoad()
 	self.Title:SetText(L.MISSING)
 	self.buttons = {}
+end
+
+-- Ends a shift-drag. The row is protected in combat, so only out of it.
+function BuffReminderBarMixin:StopMoving()
+	if not self.moving or InCombatLockdown() then return end
+	self.moving = nil
+	self:StopMovingOrSizing()
+	self:SavePosition()
 end
 
 -- Saved by its center, so the row stays centered as buttons come and go.
@@ -174,6 +182,7 @@ end)
 local combatBuffs, combatCasts = {}, {}
 ns:On("PLAYER_REGEN_DISABLED", function()
 	local bar = BuffReminderBar
+	bar:StopMoving()
 	ns:FillCombatBuffs(combatBuffs, combatCasts)
 	if ns.db.bar and #combatBuffs > 0 then
 		bar:Layout(combatBuffs, combatCasts)
