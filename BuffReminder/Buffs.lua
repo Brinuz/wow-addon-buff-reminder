@@ -8,7 +8,8 @@
 --            default ALWAYS)
 --   weapon   checks a temporary weapon enchant instead of an aura, on the
 --            main hand, or on both hands when `bothHands` (an off-hand
---            weapon only)
+--            weapon only). `enchantType` (an Enum.ItemEnchantType) tells
+--            them apart: imbues and stones stack on the same weapon
 --   tracking checks the minimap tracking instead of an aura
 --   items    weapon items applied from the bags, best first; the row uses
 --            the one last used. Without spells or minLevel, known while
@@ -41,7 +42,8 @@ ns.BUFFS = {
 	SHAMAN = {
 		{key = "LIGHTNING_SHIELD", spells = {324}},
 		-- Rockbiter, Flametongue, Frostbrand, Windfury.
-		{key = "WEAPON_IMBUE", label = "WEAPON_IMBUE", spells = {8017, 8024, 8033, 8232}, weapon = true},
+		{key = "WEAPON_IMBUE", label = "WEAPON_IMBUE", spells = {8017, 8024, 8033, 8232}, weapon = true,
+			enchantType = Enum.ItemEnchantType.Imbue},
 	},
 	DRUID = {
 		{key = "MARK_OF_THE_WILD", spells = {1126}, also = {21849}},
@@ -50,6 +52,7 @@ ns.BUFFS = {
 	},
 	ROGUE = {
 		{key = "POISONS", label = "POISONS", tooltip = "POISONS_TOOLTIP", weapon = true, bothHands = true,
+			enchantType = Enum.ItemEnchantType.Temporary,
 			minLevel = 20, items = {
 				8928, 8927, 8926, 6950, 6949, 6947,        -- Instant Poison VI to I
 				20844, 8985, 8984, 2893, 2892,             -- Deadly Poison V to I
@@ -78,6 +81,7 @@ ns.BUFFS = {
 	-- Weapon stones and oils, for every class.
 	ITEMS = {
 		{key = "WEAPON_STONE", label = "WEAPON_STONE", tooltip = "WEAPON_STONE_TOOLTIP", weapon = true,
+			enchantType = Enum.ItemEnchantType.Temporary,
 			bothHands = true, mode = ns.MODE.OUT_OF_COMBAT, items = {
 				23122, 18262, 12404, 7964, 2871, 2863, 2862, -- sharpening stones: Consecrated, Elemental, Dense to Rough
 				12643, 7965, 3241, 3240, 3239,              -- weightstones: Dense to Rough

@@ -58,6 +58,19 @@ end
 -- combat ends.
 local seen = {}
 
+-- Whether the aura with this instance ID is still on; nil when the game
+-- won't say. In boss fights an aura can be secret even by instance ID, and
+-- asking then is an error, not a nil.
+local function StillOn(instanceID)
+	if C_Secrets and C_Secrets.ShouldUnitAuraInstanceBeSecret
+		and C_Secrets.ShouldUnitAuraInstanceBeSecret("player", instanceID) then
+		return nil
+	end
+	local ok, aura = pcall(C_UnitAuras.GetAuraDataByAuraInstanceID, "player", instanceID)
+	if not ok then return nil end
+	return aura ~= nil
+end
+
 -- The aura's name if the player has any spell that counts, false if none,
 -- nil when the game won't say.
 local function FindAura(buff)
@@ -85,9 +98,9 @@ local function FindAura(buff)
 	local last = seen[buff]
 	if not last then return false end
 	if last.instanceID then
-		if C_UnitAuras.GetAuraDataByAuraInstanceID("player", last.instanceID) then
-			return last.name
-		end
+		local on = StillOn(last.instanceID)
+		if on == nil then return nil end
+		if on then return last.name end
 		seen[buff] = nil
 		return false
 	end
@@ -108,16 +121,24 @@ local function Cast(buff, name)
 	ns:QueueCheck()
 end
 
+-- A fishing pole doesn't count: no imbue, stone or poison is wanted on it.
+-- (Profession-tool poles aren't weapons at all.)
 local function IsWeapon(slot)
 	local itemID = GetInventoryItemID("player", slot)
 	if not itemID then return false end
-	local classID = select(6, C_Item.GetItemInfoInstant(itemID))
-	return classID == Enum.ItemClass.Weapon
+	local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+	return classID == Enum.ItemClass.Weapon and subclassID ~= Enum.ItemWeaponSubclass.Fishingpole
 end
 
-local function HasEnchant(weaponSlot)
+-- An enchant of this type on the weapon (any type when `enchantType` is
+-- nil, or when the game gives no types).
+local function HasEnchant(weaponSlot, enchantType)
+	local None = Enum.ItemEnchantType.None
 	for _, enchant in ipairs(C_Item.GetWeaponEnchantInfo(weaponSlot)) do
-		if enchant.hasEnchant then return true end
+		if enchant.hasEnchant and (not enchantType or enchant.enchantType == enchantType
+			or (enchant.enchantType or None) == None) then
+			return true
+		end
 	end
 	return false
 end
@@ -138,8 +159,8 @@ end
 -- nothing missing. Otherwise false and the slot to apply an item to.
 local function HasWeaponBuff(buff)
 	if not IsWeapon(INVSLOT_MAINHAND) then return true end
-	if not HasEnchant(Enum.WeaponSlot.MainHand) then return false, INVSLOT_MAINHAND end
-	if buff.bothHands and IsWeapon(INVSLOT_OFFHAND) and not HasEnchant(Enum.WeaponSlot.OffHand) then
+	if not HasEnchant(Enum.WeaponSlot.MainHand, buff.enchantType) then return false, INVSLOT_MAINHAND end
+	if buff.bothHands and IsWeapon(INVSLOT_OFFHAND) and not HasEnchant(Enum.WeaponSlot.OffHand, buff.enchantType) then
 		return false, INVSLOT_OFFHAND
 	end
 	return true
@@ -339,5 +360,13 @@ function ns:Debug()
 			castID and (C_Spell.GetSpellName(castID) or castID) or "-", tostring(found),
 			last and (last.instanceID and "aura " .. last.instanceID or "cast, "
 				.. (last.expires and ("%.0fs left"):format(last.expires - GetTime()) or "until combat ends")) or "-"))
+	end
+	for name, slot in pairs(Enum.WeaponSlot) do
+		for _, enchant in ipairs(C_Item.GetWeaponEnchantInfo(slot)) do
+			if enchant.hasEnchant then
+				print(("  %s enchant %d: type %s, %.0fs left"):format(name, enchant.enchantID,
+					tostring(enchant.enchantType), (enchant.timeLeft or 0) / 1000))
+			end
+		end
 	end
 end
